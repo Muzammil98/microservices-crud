@@ -90,3 +90,17 @@ serverless offline
 ```
 
 To learn more about the capabilities of `serverless-offline`, please refer to its [GitHub repository](https://github.com/dherault/serverless-offline).
+
+
+
+## some scripts used
+
+```
+npx sls plugin install --name serverless-offline
+npx sls plugin install --name serverless-plugin-typescript
+npx tsc --init
+npm install -D typescript ts-node
+npm install aws-lambda
+npm install -D @types/aws-lambda
+```
+
