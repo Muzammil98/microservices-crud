@@ -26,6 +26,7 @@ const response_1 = require("../utility/response");
 const user_repository_1 = require("../repository/user-repository");
 const tsyringe_1 = require("tsyringe");
 const password_1 = __importDefault(require("../utility/password"));
+const notification_1 = require("../utility/notification");
 let UserService = class UserService {
     constructor(repository) {
         this.repository = repository;
@@ -33,24 +34,61 @@ let UserService = class UserService {
     createUser(event) {
         var _a, _b, _c, _d;
         return __awaiter(this, void 0, void 0, function* () {
-            const body = event.body;
-            // @ts-ignore
-            const email = (_a = body.email) !== null && _a !== void 0 ? _a : "", phone = (_b = body.phone) !== null && _b !== void 0 ? _b : "", user_type = (_c = body.user_type) !== null && _c !== void 0 ? _c : "USER", password = (_d = body.password) !== null && _d !== void 0 ? _d : "";
-            if (!body || !email || !phone || !password)
-                return (0, response_1.errorResponse)(400, "Values are missing");
-            const hash = yield password_1.default.getHash(password);
-            const data = yield this.repository.createAccount({
-                email,
-                phone,
-                user_type,
-                hash
-            });
-            return (0, response_1.successResponse)({ message: "User created successfuly", data });
+            try {
+                const body = event.body;
+                // @ts-ignore
+                const email = (_a = body.email) !== null && _a !== void 0 ? _a : "", phone = (_b = body.phone) !== null && _b !== void 0 ? _b : "", user_type = (_c = body.user_type) !== null && _c !== void 0 ? _c : "USER", password = (_d = body.password) !== null && _d !== void 0 ? _d : "";
+                if (!body || !email || !phone || !password)
+                    return (0, response_1.errorResponse)(400, "Values are missing");
+                const hash = yield password_1.default.getHash(password);
+                const data = yield this.repository.createAccount({
+                    email,
+                    phone,
+                    user_type,
+                    hash
+                });
+                return (0, response_1.successResponse)(data);
+            }
+            catch (error) {
+                console.log(error);
+                return (0, response_1.errorResponse)(500, error);
+            }
         });
     }
     loginUser(event) {
+        var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
+            try {
+                // @ts-ignore
+                const body = event.body;
+                const email = (_a = body.email) !== null && _a !== void 0 ? _a : "", password = (_b = body.password) !== null && _b !== void 0 ? _b : "";
+                if (!email || !password)
+                    return (0, response_1.errorResponse)(400, "Values are missing");
+                const _user = yield this.repository.findAccount(email);
+                // check and validate user passowrd
+                const isValid = yield password_1.default.compare(password, _user.hash);
+                if (!isValid)
+                    return (0, response_1.errorResponse)(400, "Invalid email or password");
+                // @ts-ignore
+                delete _user.hash;
+                const token = yield password_1.default.getToken(_user);
+                return (0, response_1.successResponse)({ token });
+            }
+            catch (error) {
+                console.log(error);
+                return (0, response_1.errorResponse)(500, error);
+            }
             return (0, response_1.successResponse)({ message: "User logged in successfuly" });
+        });
+    }
+    getVerificationToken(event) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const token = event.headers.authorization;
+            if (!token)
+                return (0, response_1.errorResponse)(401, "Unauthorized");
+            const { code, expiry } = (0, notification_1.GenerateAccessCode)();
+            yield (0, notification_1.SendVerificationCode)(code, "+923408587578");
+            return (0, response_1.successResponse)({ message: "OTP sent successfully" });
         });
     }
     verifyUser(event) {

@@ -23,6 +23,7 @@
 // };
 
 export interface IUserModel {
+    _id?: string,
     email: string,
     phone: string,
     user_type: "ADMIN" | "USER",

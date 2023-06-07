@@ -24,12 +24,22 @@ const service = tsyringe_1.container.resolve(user_service_1.UserService);
 exports.signup = (0, core_1.default)((event) => {
     return service.createUser(event);
 }).use((0, http_json_body_parser_1.default)());
-const login = (event) => __awaiter(void 0, void 0, void 0, function* () {
+exports.login = (0, core_1.default)((event) => {
     return service.loginUser(event);
-});
-exports.login = login;
+}).use((0, http_json_body_parser_1.default)());
 const verify = (event) => __awaiter(void 0, void 0, void 0, function* () {
-    return service.verifyUser(event);
+    const httpMethod = event.requestContext.http.method;
+    switch (httpMethod) {
+        case misc_1.HTTP_METHODS.Get:
+            return service.getVerificationToken(event);
+            break;
+        case misc_1.HTTP_METHODS.Post:
+            return service.verifyUser(event);
+            break;
+        default:
+            return (0, response_1.errorResponse)(404, "Method is not supported");
+            break;
+    }
 });
 exports.verify = verify;
 const profile = (event) => __awaiter(void 0, void 0, void 0, function* () {

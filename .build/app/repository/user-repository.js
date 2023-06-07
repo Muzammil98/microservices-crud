@@ -26,11 +26,27 @@ class UserRepository {
             //     "created_at" timestamptz NOT NULL DEFAULT (now())
             // )`);
             // console.log("createResult",createResult)
-            const query = `INSERT INTO users(email, phone, user_type, hash) VALUES($1,$2,$3,$4)`;
+            const query = `INSERT INTO users(email, phone, user_type, hash) VALUES($1,$2,$3,$4) RETURNING *`;
             const values = [email, phone, user_type, hash];
             const result = yield db.query(query, values);
-            console.log("CREATE", result);
+            // console.log("CREATE", result)
             yield db.end();
+            if (result.rowCount > 0) {
+                return result.rows[0];
+            }
+        });
+    }
+    findAccount(email) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const db = yield (0, dbClient_1.DBClient)();
+            yield db.connect();
+            const query = `SELECT _id, email, hash, user_type, phone FROM users WHERE email = $1`;
+            const values = [email,];
+            const result = yield db.query(query, values);
+            yield db.end();
+            if (result.rowCount < 1)
+                throw new Error("User does not exist with that email id");
+            return result.rows[0];
         });
     }
 }
